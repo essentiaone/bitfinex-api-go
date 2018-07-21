@@ -1,6 +1,5 @@
 package bitfinex
 
-
 type AccountService struct {
 	client *Client
 }
@@ -18,21 +17,21 @@ type AccountInfo struct {
 }
 
 // GET account_infos
-func (a *AccountService) Info() (AccountInfo, error) {
+func (a *AccountService) Info() (*[]AccountInfo, error) {
 	req, err := a.client.newAuthenticatedRequest("GET", "account_infos", nil)
 
 	if err != nil {
-		return AccountInfo{}, err
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err}
 	}
 
 	var v []AccountInfo
 	_, err = a.client.do(req, &v)
 
 	if err != nil {
-		return AccountInfo{}, err
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err}
 	}
 
-	return v[0], nil
+	return &v, nil
 }
 
 type Fees struct {
@@ -40,17 +39,17 @@ type Fees struct {
 }
 
 // AccountFees return withdraw and deposit(are equal for 20.07.2018) fee
-func (a *AccountService) AccountFees() (Fees, error) {
+func (a *AccountService) AccountFees() (*Fees, error) {
 	req, err := a.client.newAuthenticatedRequest("POST", "account_fees", nil)
 
 	if err != nil {
-		return Fees{}, err
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err}
 	}
 	var f Fees
 	_, err = a.client.do(req, &f)
 	if err != nil {
-		return Fees{}, err
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err}
 	}
 
-	return f, nil
+	return &f, nil
 }

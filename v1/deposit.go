@@ -22,7 +22,7 @@ func (d *DepositResponse) Success() (bool, error) {
 	}
 }
 
-func (s *DepositService) New(method, walletName string, renew int) (DepositResponse, error) {
+func (s *DepositService) New(method, walletName string, renew int) (*DepositResponse, error) {
 
 	payload := map[string]interface{}{
 		"method":      method,
@@ -33,14 +33,14 @@ func (s *DepositService) New(method, walletName string, renew int) (DepositRespo
 	req, err := s.client.newAuthenticatedRequest("POST", "deposit/new", payload)
 
 	if err != nil {
-		return DepositResponse{}, err
+		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"newAuthenticatedRequest", FuncError: err}
 	}
 
 	var v DepositResponse
 	_, err = s.client.do(req, &v)
 
 	if err != nil {
-		return DepositResponse{}, err
+		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"do", FuncError: err}
 	}
-	return v, nil
+	return &v, nil
 }

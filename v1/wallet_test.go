@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
+	"fmt"
 )
 
 func TestWalletTransfer(t *testing.T) {
@@ -32,7 +33,7 @@ func TestWalletTransfer(t *testing.T) {
 	}
 }
 
-func TestWithdrawCrypto(t *testing.T) {
+func TestWithdrawCryptoSuccess(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
 		msg := `[{
           "status":"success",
@@ -63,12 +64,12 @@ func TestWithdrawCrypto(t *testing.T) {
 
 }
 
-func TestWithdrawWire(t *testing.T) {
+func TestWithdrawCryptoError(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
 		msg := `[{
-          "status":"success",
-          "message":"Your withdrawal request has been successfully submitted.",
-          "withdrawal_id":586829
+          "status":"error",
+          "message":"Your withdrawal request has errors.",
+			"withdrawal_id":0
         }]`
 		resp := http.Response{
 			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
@@ -77,37 +78,14 @@ func TestWithdrawWire(t *testing.T) {
 		return &resp, nil
 	}
 
-	intermediaryBank := BankAccount{
-		AccountName:   "Bank Account Name",
-		AccountNumber: "IBAN12355678976543",
-		BankName:      "HongKong Bank",
-		BankAddress:   "Bank Address",
-		BankCity:      "Bank City",
-		BankCountry:   "Bank Country",
-		SwiftCode:     "SWIFT",
-	}
-	beneficiaryBank := BankAccount{
-		AccountName:   "Bank Account Name",
-		AccountNumber: "IBAN12355678976543",
-		BankName:      "HongKong Bank",
-		BankAddress:   "Bank Address",
-		BankCity:      "Bank City",
-		BankCountry:   "Bank Country",
-		SwiftCode:     "SWIFT",
-	}
-	response, err := NewClient().Wallet.WithdrawWire(10.0, true, WALLET_DEPOSIT, beneficiaryBank, intermediaryBank, "Wire MESSAGE")
+	_, err := NewClient().Wallet.WithdrawCrypto(10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC")
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		fmt.Println("123")
+		t.Error("TestWithdrawCryptoError failed because of err = nil")
+		return
 	}
 
-	if response[0].Status != "success" {
-		t.Error("Expected", "success")
-		t.Error("Actual ", response[0].Status)
-	}
-	if response[0].WithdrawalID != 586829 {
-		t.Error("Expected", 586829)
-		t.Error("Actual ", response[0].WithdrawalID)
-	}
-
+	fmt.Print(err)
 }
+

@@ -34,23 +34,10 @@ type Client struct {
 	APISecret string
 
 	// Services
-	Pairs         *PairsService
-	Stats         *StatsService
-	Ticker        *TickerService
 	Account       *AccountService
 	Balances      *BalancesService
-	Offers        *OffersService
-	Credits       *CreditsService
 	Deposit       *DepositService
-	Lendbook      *LendbookService
-	MarginInfo    *MarginInfoService
-	MarginFunding *MarginFundingService
-	OrderBook     *OrderBookService
 	Orders        *OrderService
-	Trades        *TradesService
-	Positions     *PositionsService
-	History       *HistoryService
-	WebSocket     *WebSocketService
 	Wallet        *WalletService
 }
 
@@ -59,24 +46,11 @@ func NewClient() *Client {
 	baseURL, _ := url.Parse(BaseURL)
 
 	c := &Client{BaseURL: baseURL, WebSocketURL: WebSocketURL}
-	c.Pairs = &PairsService{client: c}
-	c.Stats = &StatsService{client: c}
 	c.Account = &AccountService{client: c}
-	c.Ticker = &TickerService{client: c}
 	c.Balances = &BalancesService{client: c}
-	c.Offers = &OffersService{client: c}
-	c.Credits = &CreditsService{client: c}
 	c.Deposit = &DepositService{client: c}
-	c.Lendbook = &LendbookService{client: c}
-	c.MarginInfo = &MarginInfoService{client: c}
-	c.MarginFunding = &MarginFundingService{client: c}
-	c.OrderBook = &OrderBookService{client: c}
 	c.Orders = &OrderService{client: c}
-	c.History = &HistoryService{client: c}
-	c.Trades = &TradesService{client: c}
-	c.Positions = &PositionsService{client: c}
 	c.Wallet = &WalletService{client: c}
-	c.WebSocket = NewWebSocketService(c)
 	c.WebSocketTLSSkipVerify = false
 
 	return c
@@ -217,6 +191,16 @@ func (r *ErrorResponse) Error() string {
 		r.Response.Response.StatusCode,
 		r.Message,
 	)
+}
+
+type ErrorHandler struct {
+	FuncWhere string
+	FuncWhat string
+	FuncError error
+}
+
+func (r ErrorHandler) Error() string {
+	return  fmt.Sprintf("Error from func %s in func %s, error: %s", r.FuncWhere, r.FuncWhat, r.FuncError.Error())
 }
 
 // checkResponse checks response status code and response
