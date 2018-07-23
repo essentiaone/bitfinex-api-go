@@ -21,14 +21,14 @@ func (a *AccountService) Info() (*[]AccountInfo, error) {
 	req, err := a.client.newAuthenticatedRequest("GET", "account_infos", nil)
 
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
 	var v []AccountInfo
 	_, err = a.client.do(req, &v)
 
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err.Error()}
 	}
 
 	return &v, nil
@@ -43,13 +43,13 @@ func (a *AccountService) AccountFees() (*Fees, error) {
 	req, err := a.client.newAuthenticatedRequest("POST", "account_fees", nil)
 
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
-	var f Fees
-	_, err = a.client.do(req, &f)
+	f := &Fees{}
+	_, err = a.client.do(req, f)
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err.Error()}
 	}
 
-	return &f, nil
+	return f, nil
 }

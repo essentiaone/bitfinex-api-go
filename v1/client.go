@@ -196,11 +196,11 @@ func (r *ErrorResponse) Error() string {
 type ErrorHandler struct {
 	FuncWhere string
 	FuncWhat string
-	FuncError error
+	FuncError string
 }
 
-func (r ErrorHandler) Error() string {
-	return  fmt.Sprintf("Error from func %s in func %s, error: %s", r.FuncWhere, r.FuncWhat, r.FuncError.Error())
+func (r *ErrorHandler) Error() string {
+	return  fmt.Sprintf("Error from func %s in func %s, error: %s", r.FuncWhere, r.FuncWhat, r.FuncError)
 }
 
 // checkResponse checks response status code and response

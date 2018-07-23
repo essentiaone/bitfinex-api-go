@@ -33,14 +33,14 @@ func (s *DepositService) New(method, walletName string, renew int) (*DepositResp
 	req, err := s.client.newAuthenticatedRequest("POST", "deposit/new", payload)
 
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"newAuthenticatedRequest", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
-	var v DepositResponse
-	_, err = s.client.do(req, &v)
+	v := &DepositResponse{}
+	_, err = s.client.do(req, v)
 
 	if err != nil {
-		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"do", FuncError: err}
+		return nil, &ErrorHandler{FuncWhere: "Deposit new", FuncWhat:"do", FuncError: err.Error()}
 	}
-	return &v, nil
+	return v, nil
 }

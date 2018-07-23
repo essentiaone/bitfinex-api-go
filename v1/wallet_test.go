@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"testing"
-	"fmt"
 )
 
 func TestWalletTransfer(t *testing.T) {
@@ -21,7 +20,8 @@ func TestWalletTransfer(t *testing.T) {
 		return &resp, nil
 	}
 
-	response, err := NewClient().Wallet.Transfer(10.0, "BTC", "1WalletA", "1WalletB")
+	tr := TransferRequest{10.0, "BTC", "1WalletA", "1WalletB"}
+	response, err := NewClient().Wallet.Transfer(tr)
 
 	if err != nil {
 		t.Error(err)
@@ -47,7 +47,8 @@ func TestWithdrawCryptoSuccess(t *testing.T) {
 		return &resp, nil
 	}
 
-	response, err := NewClient().Wallet.WithdrawCrypto(10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC")
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	response, err := NewClient().Wallet.WithdrawCrypto(wd)
 
 	if err != nil {
 		t.Error(err)
@@ -78,14 +79,50 @@ func TestWithdrawCryptoError(t *testing.T) {
 		return &resp, nil
 	}
 
-	_, err := NewClient().Wallet.WithdrawCrypto(10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC")
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	_, err := NewClient().Wallet.WithdrawCrypto(wd)
 
 	if err == nil {
-		fmt.Println("123")
 		t.Error("TestWithdrawCryptoError failed because of err = nil")
 		return
 	}
+	if err.Error() != "Error from func Withdraw in func check status, error: withddraw status error" {
+		t.Error("Expected", "Error from func Withdraw in func check status, error: withddraw status error")
+		t.Error("Actual ", err.Error())
+	}
+}
 
-	fmt.Print(err)
+func TestWithdrawCryptoErrorFailed(t *testing.T) {
+	httpDo = func(req *http.Request) (*http.Response, error) {
+		msg := `{"response":
+					{"response":
+						{"request":
+							{"Status"  :"500 err",
+							"StatusCode": 500, 
+							"Method":"POST",
+							"URL":{"scheme": "http"} 
+							}
+						}
+					},	
+					"message":"some error"}`
+
+		resp := http.Response{
+			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
+			StatusCode: 500,
+		}
+		return &resp, nil
+	}
+
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	_, err := NewClient().Wallet.WithdrawCrypto(wd)
+
+	if err == nil {
+		t.Error("TestWithdrawCryptoError failed because of err = nil")
+		return
+	}
+	if err.Error() != "Error from func Withdraw in func do, error: POST http://: 500 some error" {
+		t.Error("Expected","Error from func Withdraw in func do, error: POST http://: 500 some error")
+		t.Error("Actual ", err.Error())
+	}
 }
 
