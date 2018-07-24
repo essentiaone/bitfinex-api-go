@@ -20,7 +20,8 @@ func TestWalletTransfer(t *testing.T) {
 		return &resp, nil
 	}
 
-	response, err := NewClient().Wallet.Transfer(10.0, "BTC", "1WalletA", "1WalletB")
+	tr := TransferRequest{10.0, "BTC", "1WalletA", "1WalletB"}
+	response, err := NewClient().Wallet.Transfer(tr)
 
 	if err != nil {
 		t.Error(err)
@@ -32,7 +33,7 @@ func TestWalletTransfer(t *testing.T) {
 	}
 }
 
-func TestWithdrawCrypto(t *testing.T) {
+func TestWithdrawCryptoSuccess(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
 		msg := `[{
           "status":"success",
@@ -46,7 +47,8 @@ func TestWithdrawCrypto(t *testing.T) {
 		return &resp, nil
 	}
 
-	response, err := NewClient().Wallet.WithdrawCrypto(10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC")
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	response, err := NewClient().Wallet.WithdrawCrypto(wd)
 
 	if err != nil {
 		t.Error(err)
@@ -63,12 +65,12 @@ func TestWithdrawCrypto(t *testing.T) {
 
 }
 
-func TestWithdrawWire(t *testing.T) {
+func TestWithdrawCryptoError(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
 		msg := `[{
-          "status":"success",
-          "message":"Your withdrawal request has been successfully submitted.",
-          "withdrawal_id":586829
+          "status":"error",
+          "message":"Your withdrawal request has errors.",
+			"withdrawal_id":0
         }]`
 		resp := http.Response{
 			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
@@ -77,37 +79,50 @@ func TestWithdrawWire(t *testing.T) {
 		return &resp, nil
 	}
 
-	intermediaryBank := BankAccount{
-		AccountName:   "Bank Account Name",
-		AccountNumber: "IBAN12355678976543",
-		BankName:      "HongKong Bank",
-		BankAddress:   "Bank Address",
-		BankCity:      "Bank City",
-		BankCountry:   "Bank Country",
-		SwiftCode:     "SWIFT",
-	}
-	beneficiaryBank := BankAccount{
-		AccountName:   "Bank Account Name",
-		AccountNumber: "IBAN12355678976543",
-		BankName:      "HongKong Bank",
-		BankAddress:   "Bank Address",
-		BankCity:      "Bank City",
-		BankCountry:   "Bank Country",
-		SwiftCode:     "SWIFT",
-	}
-	response, err := NewClient().Wallet.WithdrawWire(10.0, true, WALLET_DEPOSIT, beneficiaryBank, intermediaryBank, "Wire MESSAGE")
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	_, err := NewClient().Wallet.WithdrawCrypto(wd)
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error("TestWithdrawCryptoError failed because of err = nil")
+		return
 	}
-
-	if response[0].Status != "success" {
-		t.Error("Expected", "success")
-		t.Error("Actual ", response[0].Status)
+	if err.Error() != "Error from func Withdraw in func check status, error: withddraw status error" {
+		t.Error("Expected", "Error from func Withdraw in func check status, error: withddraw status error")
+		t.Error("Actual ", err.Error())
 	}
-	if response[0].WithdrawalID != 586829 {
-		t.Error("Expected", 586829)
-		t.Error("Actual ", response[0].WithdrawalID)
-	}
-
 }
+
+func TestWithdrawCryptoErrorFailed(t *testing.T) {
+	httpDo = func(req *http.Request) (*http.Response, error) {
+		msg := `{"response":
+					{"response":
+						{"request":
+							{"Status"  :"500 err",
+							"StatusCode": 500, 
+							"Method":"POST",
+							"URL":{"scheme": "http"} 
+							}
+						}
+					},	
+					"message":"some error"}`
+
+		resp := http.Response{
+			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
+			StatusCode: 500,
+		}
+		return &resp, nil
+	}
+
+	wd := WithdrawRequest{10.0, "bitcoin", WALLET_DEPOSIT, "1WalletABC"}
+	_, err := NewClient().Wallet.WithdrawCrypto(wd)
+
+	if err == nil {
+		t.Error("TestWithdrawCryptoError failed because of err = nil")
+		return
+	}
+	if err.Error() != "Error from func Withdraw in func do, error: POST http://: 500 some error" {
+		t.Error("Expected","Error from func Withdraw in func do, error: POST http://: 500 some error")
+		t.Error("Actual ", err.Error())
+	}
+}
+

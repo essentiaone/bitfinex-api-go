@@ -1,91 +1,31 @@
 package bitfinex
 
 import (
-	"bytes"
-	"io/ioutil"
 	"net/http"
+	"io/ioutil"
+	"bytes"
 	"testing"
 )
 
-func TestOrdersAll(t *testing.T) {
-	httpDo = func(req *http.Request) (*http.Response, error) {
-		msg := `
-        [{
-           "id":448411365,
-           "symbol":"btcusd",
-           "exchange":"bitfinex",
-           "price":"0.02",
-           "avg_execution_price":"0.0",
-           "side":"buy",
-           "type":"exchange limit",
-           "timestamp":"1444276597.0",
-           "is_live":true,
-           "is_cancelled":false,
-           "is_hidden":false,
-           "was_forced":false,
-           "original_amount":"0.02",
-           "remaining_amount":"0.02",
-           "executed_amount":"0.0"
-         }]`
-		resp := http.Response{
-			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
-			StatusCode: 200,
-		}
-		return &resp, nil
-	}
-
-	orders, err := NewClient().Orders.All()
-
-	if err != nil {
-		t.Error(err)
-	}
-
-	expectedID := int64(448411365)
-	if orders[0].ID != expectedID {
-		t.Error("Expected", expectedID)
-		t.Error("Actual ", orders[0].ID)
-	}
-
-}
-
-func TestCreateMulti(t *testing.T) {
+func TestOrderService_CreateSuccess(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
 		msg := `{
-            "order_ids":[{
-            "id":448383727,
-            "symbol":"btcusd",
-            "exchange":"bitfinex",
-            "price":"0.01",
-            "avg_execution_price":"0.0",
-            "side":"buy",
-            "type":"exchange limit",
-            "timestamp":"1444274013.621701916",
-            "is_live":true,
-            "is_cancelled":false,
-            "is_hidden":false,
-            "was_forced":false,
-            "original_amount":"0.01",
-            "remaining_amount":"0.01",
-            "executed_amount":"0.0"
-         },{
-            "id":448383729,
-            "symbol":"btcusd",
-            "exchange":"bitfinex",
-            "price":"0.03",
-            "avg_execution_price":"0.0",
-            "side":"buy",
-            "type":"exchange limit",
-            "timestamp":"1444274013.661297306",
-            "is_live":true,
-            "is_cancelled":false,
-            "is_hidden":false,
-            "was_forced":false,
-            "original_amount":"0.02",
-            "remaining_amount":"0.02",
-            "executed_amount":"0.0"
-          }],
-          "status":"success"
-       }`
+            "ID": 14647523792,
+			"Symbol": "ethbtc",
+			"Exchange": "bitfinex",
+			"Price": "0.060237",
+			"avg_execution_price": "0.0",
+			"Side": "sell",
+			"Type": "exchange market",
+			"Timestamp": "1532343485.784226238",
+			"is_live": true,
+			"is_cancelled": false,
+			"is_hidden": false,
+			"was_forced": false,
+			"original_amount": "0.25",
+			"remaining_amount": "0.25",
+			"executed_amount": "0.0"
+        }`
 		resp := http.Response{
 			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
 			StatusCode: 200,
@@ -93,48 +33,66 @@ func TestCreateMulti(t *testing.T) {
 		return &resp, nil
 	}
 
-	reqOrders := []SubmitOrder{{
-		Symbol: "BTCUSD",
-		Amount: 10.0,
-		Price:  450.0,
-		Type:   OrderTypeLimit,
-	}, {
-		Symbol: "BTCUSD",
-		Amount: 10.0,
-		Price:  450.0,
-		Type:   OrderTypeLimit,
-	}}
-	response, err := NewClient().Orders.CreateMulti(reqOrders)
+	or := OrderRequest{"ETHBTC",0.0316, 1,"exchange market", "sell"}
+	resp, err := NewClient().Orders.Create(or)
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(response.Orders) != 2 {
-		t.Error("Expected", 2)
-		t.Error("Actual ", len(response.Orders))
+	r := Order{
+		ID: 14647523792,
+		Symbol: "ethbtc",
+		Exchange: "bitfinex",
+		Price: "0.060237",
+		AvgExecutionPrice: "0.0",
+		Side: "sell",
+		Type: "exchange market",
+		Timestamp: "1532343485.784226238",
+		IsLive: true,
+		IsCanceled: false,
+		IsHidden: false,
+		WasForced: false,
+		OriginalAmount: "0.25",
+		RemainingAmount: "0.25",
+		ExecutedAmount: "0.0"}
+
+	if *resp != r {
+		t.Error("Expected", r)
+		t.Error("Actual ", resp)
 	}
 }
 
-func TestCancelMulti(t *testing.T) {
+func TestOrderService_CreateFailed(t *testing.T) {
 	httpDo = func(req *http.Request) (*http.Response, error) {
-		msg := `{"result":"Orders cancelled"}`
+		msg := `{"response":
+					{"response":
+						{"request":
+							{"Status"  :"500 err",
+							"StatusCode": 500, 
+							"Method":"POST",
+							"URL":{"scheme": "http"} 
+							}
+						}
+					},	
+					"message":"some error"}`
+
 		resp := http.Response{
 			Body:       ioutil.NopCloser(bytes.NewBufferString(msg)),
-			StatusCode: 200,
+			StatusCode: 500,
 		}
 		return &resp, nil
 	}
 
-	orders := []int64{1000, 1001, 1002}
-	response, err := NewClient().Orders.CancelMulti(orders)
+	or := OrderRequest{"ETHBTC", 0.0316, 1, "exchange market", "sell"}
+	_, err := NewClient().Orders.Create(or)
 
-	if err != nil {
-		t.Error(err)
+	if err == nil {
+		t.Error("TestOrderService_CreateFailed failed because of err = nil")
+		return
 	}
-
-	if response != "Orders cancelled" {
-		t.Error("Expected", "Orders cancelled")
-		t.Error("Actual ", response)
+	if err.Error() != "Error from func Order Create in func do, error: POST http://: 500 some error" {
+		t.Error("Expected","Error from func Order Create in func do, error: POST http://: 500 some error")
+		t.Error("Actual ", err.Error())
 	}
 }

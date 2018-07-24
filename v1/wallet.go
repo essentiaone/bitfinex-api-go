@@ -1,10 +1,10 @@
 package bitfinex
 
-import "strconv"
+import (
+	"strconv"
+)
 
 const (
-	WALLET_TRADING  = "trading"
-	WALLET_EXCHANGE = "exchange"
 	WALLET_DEPOSIT  = "deposit"
 )
 
@@ -17,27 +17,36 @@ type TransferStatus struct {
 	Message string
 }
 
+type TransferRequest struct {
+	amount   float64
+	currency string
+	from     string
+	to       string
+}
 // Transfer funds between wallets
-func (c *WalletService) Transfer(amount float64, currency, from, to string) ([]TransferStatus, error) {
+func (c *WalletService) Transfer(request TransferRequest) ([]TransferStatus, error) {
 
 	payload := map[string]interface{}{
-		"amount":     strconv.FormatFloat(amount, 'f', -1, 32),
-		"currency":   currency,
-		"walletfrom": from,
-		"walletto":   to,
+		"amount":     strconv.FormatFloat(request.amount, 'f', -1, 32),
+		"currency":   request.currency,
+		"walletfrom": request.from,
+		"walletto":   request.to,
 	}
 
 	req, err := c.client.newAuthenticatedRequest("GET", "transfer", payload)
 
 	if err != nil {
-		return nil, err
+		return nil, &ErrorHandler{FuncWhere: "Transfer", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
 	status := make([]TransferStatus, 0)
 
 	_, err = c.client.do(req, &status)
+	if err != nil {
+		return nil, &ErrorHandler{FuncWhere: "Transfer", FuncWhat:"do", FuncError: err.Error()}
+	}
 
-	return status, err
+	return status, nil
 }
 
 type WithdrawStatus struct {
@@ -46,79 +55,41 @@ type WithdrawStatus struct {
 	WithdrawalID int `json:"withdrawal_id"`
 }
 
+type WithdrawRequest struct {
+	amount             float64
+	currency           string
+	wallet             string
+	destinationAddress string
+}
 // Withdraw a cryptocurrency to a digital wallet
-func (c *WalletService) WithdrawCrypto(amount float64, currency, wallet, destinationAddress string) ([]WithdrawStatus, error) {
+func (c *WalletService) WithdrawCrypto(request WithdrawRequest) ([]WithdrawStatus, error) {
 
 	payload := map[string]interface{}{
-		"amount":         strconv.FormatFloat(amount, 'f', -1, 32),
-		"walletselected": wallet,
-		"withdraw_type":  currency,
-		"address":        destinationAddress,
+		"amount":         strconv.FormatFloat(request.amount, 'f', -1, 32),
+		"walletselected": request.wallet,
+		"withdraw_type":  request.currency,
+		"address":        request.destinationAddress,
 	}
 
 	req, err := c.client.newAuthenticatedRequest("GET", "withdraw", payload)
 
 	if err != nil {
-		return nil, err
+		return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
 	status := make([]WithdrawStatus, 0)
 
 	_, err = c.client.do(req, &status)
-
-	return status, err
-
-}
-
-type BankAccount struct {
-	AccountName   string // Account name
-	AccountNumber string // Account number or IBAN
-	BankName      string // Bank Name
-	BankAddress   string // Bank Address
-	BankCity      string // Bank City
-	BankCountry   string // Bank Country
-	SwiftCode     string // SWIFT Code
-}
-
-func (c *WalletService) WithdrawWire(amount float64, expressWire bool, wallet string, beneficiaryBank, intermediaryBank BankAccount, message string) ([]WithdrawStatus, error) {
-
-	var express int
-	if expressWire {
-		express = 1
-	} else {
-		express = 0
-	}
-
-	payload := map[string]interface{}{
-		"amount":                    strconv.FormatFloat(amount, 'f', -1, 32),
-		"walletselected":            wallet,
-		"withdraw_type":             "wire",
-		"expressWire":               express,
-		"account_name":              beneficiaryBank.AccountName,
-		"account_number":            beneficiaryBank.AccountNumber,
-		"bank_name":                 beneficiaryBank.BankName,
-		"bank_address":              beneficiaryBank.BankAddress,
-		"bank_city":                 beneficiaryBank.BankCity,
-		"bank_country":              beneficiaryBank.BankCountry,
-		"swift":                     beneficiaryBank.SwiftCode,
-		"detail_payment":            message,
-		"intermediary_bank_account": intermediaryBank.AccountNumber,
-		"intermediary_bank_address": intermediaryBank.BankAddress,
-		"intermediary_bank_city":    intermediaryBank.BankCity,
-		"intermediary_bank_country": intermediaryBank.BankCountry,
-		"intermediary_bank_swift":   intermediaryBank.SwiftCode,
-	}
-
-	req, err := c.client.newAuthenticatedRequest("GET", "withdraw", payload)
-
 	if err != nil {
-		return nil, err
+		return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"do", FuncError: err.(*ErrorResponse).Error()}
+	}
+	for _, withdraw := range status {
+		if withdraw.Status == "error" {
+			return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"check status", FuncError: "withddraw status error"}
+		}
 	}
 
-	status := make([]WithdrawStatus, 0)
-
-	_, err = c.client.do(req, &status)
-
-	return status, err
+	return status, nil
 
 }
+

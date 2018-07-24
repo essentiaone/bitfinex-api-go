@@ -15,14 +15,16 @@ type WalletBalance struct {
 func (b *BalancesService) All() ([]WalletBalance, error) {
 	req, err := b.client.newAuthenticatedRequest("GET", "balances", nil)
 	if err != nil {
-		return nil, err
+		return nil, &ErrorHandler{FuncWhere: "Balance All", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
 	balances := make([]WalletBalance, 3)
 	_, err = b.client.do(req, &balances)
+
 	if err != nil {
-		return nil, err
+		return nil, &ErrorHandler{FuncWhere: "Balance All", FuncWhat:"do", FuncError: err.Error()}
 	}
+
 
 	return balances, nil
 }

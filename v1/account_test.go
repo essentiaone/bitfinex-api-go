@@ -35,14 +35,15 @@ func TestAccountInfo(t *testing.T) {
 	}
 
 	info, err := NewClient().Account.Info()
+	//info2 := *info
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(info.Fees) != 3 {
+	if len((*info)[0].Fees) != 3 {
 		t.Error("Expected", 3)
-		t.Error("Actual ", len(info.Fees))
+		t.Error("Actual ", len((*info)[0].Fees))
 	}
 }
 
@@ -96,7 +97,7 @@ func TestAccountFeesFailed(t *testing.T) {
 		t.Error("TestAccountFeesFailed failed because of err = nil")
 		return
 	}
-	if err.Error() != "POST http://: 500 some error" {
+	if err.Error() != "Error from func AccountFees in func do, error: POST http://: 500 some error" {
 		t.Error("TestAccountFeesFailed failed because of err =", err)
 	}
 }
