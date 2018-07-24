@@ -35,15 +35,15 @@ func TestAccountInfo(t *testing.T) {
 	}
 
 	info, err := NewClient().Account.Info()
-	info2 := *info
+	//info2 := *info
 
 	if err != nil {
 		t.Error(err)
 	}
 
-	if len(info2[0].Fees) != 3 {
+	if len((*info)[0].Fees) != 3 {
 		t.Error("Expected", 3)
-		t.Error("Actual ", len(info2[0].Fees))
+		t.Error("Actual ", len((*info)[0].Fees))
 	}
 }
 

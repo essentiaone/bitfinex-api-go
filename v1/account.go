@@ -24,14 +24,14 @@ func (a *AccountService) Info() (*[]AccountInfo, error) {
 		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
 	}
 
-	var v []AccountInfo
-	_, err = a.client.do(req, &v)
+	v := &[]AccountInfo{}
+	_, err = a.client.do(req, v)
 
 	if err != nil {
 		return nil, &ErrorHandler{FuncWhere: "AccountFees", FuncWhat:"do", FuncError: err.Error()}
 	}
 
-	return &v, nil
+	return v, nil
 }
 
 type Fees struct {
