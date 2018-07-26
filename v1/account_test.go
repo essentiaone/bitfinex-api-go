@@ -35,7 +35,6 @@ func TestAccountInfo(t *testing.T) {
 	}
 
 	info, err := NewClient().Account.Info()
-	//info2 := *info
 
 	if err != nil {
 		t.Error(err)
