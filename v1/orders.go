@@ -34,22 +34,22 @@ type Order struct {
 }
 
 type OrderRequest struct {
-	symbol    string
-	amount    float64
-	price     float64
-	orderType string
-	side      string
+	Symbol    string
+	Amount    float64
+	Price     float64
+	OrderType string
+	Side      string
 }
 
 // Create a new order.
 func (s *OrderService) Create(request OrderRequest) (*Order, error) {
 
 	payload := map[string]interface{}{
-		"symbol":   request.symbol,
-		"amount":   strconv.FormatFloat(request.amount, 'f', -1, 32),
-		"price":    strconv.FormatFloat(request.price, 'f', -1, 32),
-		"side":     request.side,
-		"type":     request.orderType,
+		"symbol":   request.Symbol,
+		"amount":   strconv.FormatFloat(request.Amount, 'f', -1, 32),
+		"price":    strconv.FormatFloat(request.Price, 'f', -1, 32),
+		"side":     request.Side,
+		"type":     request.OrderType,
 		"exchange": "bitfinex",
 	}
 

@@ -18,22 +18,22 @@ type TransferStatus struct {
 }
 
 type TransferRequest struct {
-	amount   float64
-	currency string
-	from     string
-	to       string
+	Amount   float64
+	Currency string
+	From     string
+	To       string
 }
 // Transfer funds between wallets
 func (c *WalletService) Transfer(request TransferRequest) ([]TransferStatus, error) {
 
 	payload := map[string]interface{}{
-		"amount":     strconv.FormatFloat(request.amount, 'f', -1, 32),
-		"currency":   request.currency,
-		"walletfrom": request.from,
-		"walletto":   request.to,
+		"amount":     strconv.FormatFloat(request.Amount, 'f', -1, 32),
+		"currency":   request.Currency,
+		"walletfrom": request.From,
+		"walletto":   request.To,
 	}
 
-	req, err := c.client.newAuthenticatedRequest("GET", "transfer", payload)
+	req, err := c.client.newAuthenticatedRequest("POST", "transfer", payload)
 
 	if err != nil {
 		return nil, &ErrorHandler{FuncWhere: "Transfer", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
@@ -45,7 +45,11 @@ func (c *WalletService) Transfer(request TransferRequest) ([]TransferStatus, err
 	if err != nil {
 		return nil, &ErrorHandler{FuncWhere: "Transfer", FuncWhat:"do", FuncError: err.Error()}
 	}
-
+	for _,transfer := range status {
+		if transfer.Status == "error" {
+			return nil, &ErrorHandler{FuncWhere: "Transfer", FuncWhat:"check status", FuncError: "transfer status error " + transfer.Message}
+		}
+	}
 	return status, nil
 }
 
@@ -56,22 +60,22 @@ type WithdrawStatus struct {
 }
 
 type WithdrawRequest struct {
-	amount             float64
-	currency           string
-	wallet             string
-	destinationAddress string
+	Amount             float64
+	Currency           string
+	Wallet             string
+	DestinationAddress string
 }
 // Withdraw a cryptocurrency to a digital wallet
 func (c *WalletService) WithdrawCrypto(request WithdrawRequest) ([]WithdrawStatus, error) {
 
 	payload := map[string]interface{}{
-		"amount":         strconv.FormatFloat(request.amount, 'f', -1, 32),
-		"walletselected": request.wallet,
-		"withdraw_type":  request.currency,
-		"address":        request.destinationAddress,
+		"amount":         strconv.FormatFloat(request.Amount, 'f', -1, 32),
+		"walletselected": request.Wallet,
+		"withdraw_type":  request.Currency,
+		"address":        request.DestinationAddress,
 	}
 
-	req, err := c.client.newAuthenticatedRequest("GET", "withdraw", payload)
+	req, err := c.client.newAuthenticatedRequest("POST", "withdraw", payload)
 
 	if err != nil {
 		return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"newAuthenticatedRequest", FuncError: err.Error()}
@@ -85,7 +89,7 @@ func (c *WalletService) WithdrawCrypto(request WithdrawRequest) ([]WithdrawStatu
 	}
 	for _, withdraw := range status {
 		if withdraw.Status == "error" {
-			return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"check status", FuncError: "withddraw status error"}
+			return nil, &ErrorHandler{FuncWhere: "Withdraw", FuncWhat:"check status", FuncError: "withdraw status error " + withdraw.Message}
 		}
 	}
 

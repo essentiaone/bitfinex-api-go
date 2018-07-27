@@ -38,7 +38,9 @@ type Client struct {
 	Balances      *BalancesService
 	Deposit       *DepositService
 	Orders        *OrderService
+	OrderBook     *OrderBookService
 	Ticker        *TickerService
+	WebSocket     *WebSocketService
 	Wallet        *WalletService
 }
 
@@ -51,8 +53,10 @@ func NewClient() *Client {
 	c.Balances = &BalancesService{client: c}
 	c.Deposit = &DepositService{client: c}
 	c.Orders = &OrderService{client: c}
+	c.OrderBook = &OrderBookService{client: c}
 	c.Ticker = &TickerService{client: c}
 	c.Wallet = &WalletService{client: c}
+	c.WebSocket = NewWebSocketService(c)
 	c.WebSocketTLSSkipVerify = false
 
 	return c
