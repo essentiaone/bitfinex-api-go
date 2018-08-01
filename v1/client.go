@@ -34,15 +34,14 @@ type Client struct {
 	APISecret string
 
 	// Services
-	Account       *AccountService
-	Balances      *BalancesService
-	Deposit       *DepositService
-	Orders        *OrderService
-	OrderBook     *OrderBookService
-	Ticker        *TickerService
-	WebSocket     *WebSocketService
-	Ticker        *TickerService
-	Wallet        *WalletService
+	Account   *AccountService
+	Balances  *BalancesService
+	Deposit   *DepositService
+	Orders    *OrderService
+	OrderBook *OrderBookService
+	Ticker    *TickerService
+	WebSocket *WebSocketService
+	Wallet    *WalletService
 }
 
 // NewClient creates new Bitfinex.com API client.
@@ -55,7 +54,6 @@ func NewClient() *Client {
 	c.Deposit = &DepositService{client: c}
 	c.Orders = &OrderService{client: c}
 	c.OrderBook = &OrderBookService{client: c}
-	c.Ticker = &TickerService{client: c}
 	c.Wallet = &WalletService{client: c}
 	c.WebSocket = NewWebSocketService(c)
 	c.WebSocketTLSSkipVerify = false
@@ -202,12 +200,12 @@ func (r *ErrorResponse) Error() string {
 
 type ErrorHandler struct {
 	FuncWhere string
-	FuncWhat string
+	FuncWhat  string
 	FuncError string
 }
 
 func (r *ErrorHandler) Error() string {
-	return  fmt.Sprintf("Error from func %s in func %s, error: %s", r.FuncWhere, r.FuncWhat, r.FuncError)
+	return fmt.Sprintf("Error from func %s in func %s, error: %s", r.FuncWhere, r.FuncWhat, r.FuncError)
 }
 
 // checkResponse checks response status code and response
