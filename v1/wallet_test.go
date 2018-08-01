@@ -86,8 +86,8 @@ func TestWithdrawCryptoError(t *testing.T) {
 		t.Error("TestWithdrawCryptoError failed because of err = nil")
 		return
 	}
-	if err.Error() != "Error from func Withdraw in func check status, error: withddraw status error" {
-		t.Error("Expected", "Error from func Withdraw in func check status, error: withddraw status error")
+	if err.Error() != "Error from func Withdraw in func check status, error: withdraw status error Your withdrawal request has errors." {
+		t.Error("Expected", "Error from func Withdraw in func check status, error: withdraw status error")
 		t.Error("Actual ", err.Error())
 	}
 }
