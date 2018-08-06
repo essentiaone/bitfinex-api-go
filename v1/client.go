@@ -39,7 +39,6 @@ type Client struct {
 	Deposit       *DepositService
 	Orders        *OrderService
 	OrderBook     *OrderBookService
-	Ticker        *TickerService
 	WebSocket     *WebSocketService
 	Ticker        *TickerService
 	Wallet        *WalletService
